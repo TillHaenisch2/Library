@@ -1,0 +1,32 @@
+flowchart TB
+    classDef person fill:#08427B,stroke:#052E56,color:#FFFFFF
+    classDef system fill:#1168BD,stroke:#0B4884,color:#FFFFFF
+    classDef extSystem fill:#999999,stroke:#6B6B6B,color:#FFFFFF
+    classDef extPassive fill:#E0E0E0,stroke:#757575,color:#222222,stroke-dasharray: 5 5
+
+    Student["<b>Student</b><br/>[Person]<br/>Standard-Benutzer (max. 10 Bücher,<br/>28 Tage Leihfrist)"]:::person
+    Professor["<b>Professor</b><br/>[Person]<br/>Privilegierter Benutzer (kein Limit,<br/>keine Leihfrist)"]:::person
+    Bibliothekar["<b>Bibliothekar</b><br/>[Person]<br/>Thekenpersonal & Bestandsverwaltung"]:::person
+
+    SSA["<b>Self-Service-Ausleihe (SSA)</b><br/>[Software System]<br/>Self-Service-Terminals inkl. HF-RFID-Reader,<br/>Ausleihlogik, Sitzungs- &<br/>Warteschlangenverwaltung"]:::system
+
+    LMS["<b>LMS (Horizon)</b><br/>[Externes System – Verbund]<br/>Katalog, Exemplardaten, Konten,<br/>Gebühren & Mahnwesen"]:::extSystem
+    IdM["<b>IdM / Ausweisverwaltung</b><br/>[Externes System]<br/>Campus-Karten-IDs &<br/>Benutzerrollen"]:::extSystem
+    Notify["<b>Benachrichtigungsdienst</b><br/>[Externes System]<br/>Versand von Abholhinweisen<br/>(DSGVO-konform ohne Buchtitel)"]:::extSystem
+    WebPortal["<b>Web-Recherche & Vormerkportal</b><br/>[Externes System]<br/>Katalogsuche & zusätzlicher<br/>Online-Vormerkkanal"]:::extSystem
+
+    Rueckgabe["<b>Rückgabeautomat</b><br/>[Zukünftiges Bestandssystem]<br/>Rücknahme & EAS-Reaktivierung<br/>(aktuell an der Theke)"]:::extPassive
+    Gates["<b>RFID-Sicherungsgates</b><br/>[Bestandssystem]<br/>Diebstahlschutzkontrolle (ISO 15693)"]:::extPassive
+
+    Student -->|"Leiht Bücher aus (bis zu 5 gleichzeitig),<br/>holt Reservierungen ab & merkt vor/storniert<br/>[RFID-Ausweis/Tags, Touchscreen]"| SSA
+    Professor -->|"Leiht Bücher unbegrenzt aus,<br/>holt ab & merkt vor/storniert<br/>[RFID-Ausweis/Tags, Touchscreen]"| SSA
+    Bibliothekar -.->|"Stellt Bücher ins Abholregal bereit<br/>(Werkzeug SSA vs. LMS offen: K-5)"| SSA
+    Bibliothekar -->|"Verwaltet Bestand, Rückgaben (aktuell),<br/>Sonderfälle & Fernleihe"| LMS
+
+    SSA <-->|"Prüft Kontingent/Status, bucht Ausleihe,<br/>synchronisiert Vormerkungen & empfängt<br/>Rückgabe-Info [Verschlüsselt / SIP2]"| LMS
+    SSA -->|"Löst Karten-ID & Rolle auf"| IdM
+    SSA -->|"Löst Abholbenachrichtigung aus<br/>(bei ReadyForPickup)"| Notify
+    WebPortal -.->|"Greift auf Katalog &<br/>Vormerkungen zu"| LMS
+
+    Rueckgabe -.->|"Bucht Rückgabe direkt<br/>(zukünftig, out of scope)"| LMS
+    SSA -.->|"Deaktiviert RFID-Diebstahlschutz<br/>auf Tag für Passage"| Gates
