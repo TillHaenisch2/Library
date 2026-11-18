@@ -1,3 +1,8 @@
+To run change to sprint1 subdir and, well, just run it
+P52:~/Library$ cd sprint1/
+P52:~/Library/sprint1$ python3 -m ssa_terminal.main
+
+
 # Bibliothek: Self-Service-Ausleihe – Ziel und Umgebung
 
 
