@@ -1,0 +1,32 @@
+flowchart TB
+    classDef person fill:#08427B,stroke:#052E56,color:#FFFFFF
+    classDef container fill:#438DD5,stroke:#2E6295,color:#FFFFFF
+    classDef db fill:#438DD5,stroke:#2E6295,color:#FFFFFF
+    classDef extSystem fill:#999999,stroke:#6B6B6B,color:#FFFFFF
+
+    User["<b>Benutzer</b><br/>[Person]<br/>Student oder Professor"]:::person
+    Bib["<b>Bibliothekar</b><br/>[Person]<br/>Thekenpersonal"]:::person
+
+    subgraph SSA ["Self-Service-Ausleihe (SSA)"]
+        TerminalApp["<b>Terminal-Applikation (UI & Ablaufsteuerung)</b><br/>[Container: Kiosk-Web/Desktop-App]<br/>Barrierefreie Oberfläche (DE/EN),<br/>Sitzungs-Timeout (30s) &<br/>Alles-oder-Nichts-Feedback (max. 5 Bücher)"]:::container
+        RFIDDriver["<b>RFID-Hardware-Service</b><br/>[Container: Lokaler Daemon / Treiber]<br/>Kapselt HF-RFID-Reader (ISO 15693),<br/>liest Ausweis + bis zu 5 Buch-Tags &<br/>deaktiviert Diebstahlschutz (AFI/EAS)"]:::container
+        Backend["<b>SSA-Backend (Core Service)</b><br/>[Container: Web-API / Service]<br/>Ausleih- & Fristlogik, FIFO-Warteschlange,<br/>Single-Session-Lock & Atomaritäts-Koordination"]:::container
+        StaffWeb["<b>Abholregal-Web-UI (Option K-5)</b><br/>[Container: Web-App]<br/>Optionales Werkzeug für Übergang<br/>Returned → ReadyForPickup"]:::container
+        DB[("<b>SSA-Datenbank</b><br/>[Container: Relationale DB / KV-Store]<br/>Aktive Terminal-Sitzungen,<br/>Warteschlangen-State & Audit-Log")]:::db
+    end
+
+    LMS["<b>LMS (Horizon)</b><br/>[Externes System]<br/>Katalog, Konten & Buchungen"]:::extSystem
+    IdM["<b>IdM / Ausweisverwaltung</b><br/>[Externes System]<br/>Karten-ID → Benutzer & Rolle"]:::extSystem
+    Notify["<b>Benachrichtigungsdienst</b><br/>[Externes System]<br/>E-Mail/Push ohne Buchtitel"]:::extSystem
+
+    User -->|"Bedient Touchscreen &<br/>legt Ausweis/Bücher auf"| TerminalApp
+    TerminalApp <-->|"Liest Tags & deaktiviert<br/>Diebstahlschutz [lokales IPC/WS]"| RFIDDriver
+    TerminalApp <-->|"Prüft Regeln, bucht Ausleihe,<br/>merkt vor / storniert [HTTPS/REST]"| Backend
+
+    Bib -.->|"Stellt Bücher ins Abholregal<br/>(falls nicht über Horizon-Client)"| StaffWeb
+    StaffWeb -.->|"Meldet ReadyForPickup [HTTPS]"| Backend
+
+    Backend <-->|"Speichert Sitzungen,<br/>Warteschlange & Audit [SQL]"| DB
+    Backend <-->|"Prüft Status/Limit, bucht<br/>& empfängt Rückgaben [SIP2 / API]"| LMS
+    Backend -->|"Löst Karten-ID auf [LDAP/REST]"| IdM
+    Backend -->|"Triggert Abholhinweis [SMTP/REST]"| Notify
