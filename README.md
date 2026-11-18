@@ -1,18 +1,47 @@
-# ProgrammingWithAI
-Samples and some doc for my introductory class about programming with github copilot andf other AI tools.
+# Bibliothek: Self-Service-Ausleihe – Ziel und Umgebung
 
-We will begin the class by introducing key concepts about AI and LLMs to get a basic understanding and some intuition 
-about what will work and what not. Then we will do some prompting for fun and profit including a little promt battle to get us started.
 
-In the main part we will introduce github copilot (using Visual Studio Code) as an autocompletion on steroids. 
-Using it this way, the entry barrier for students with no or only some prior knowledge is lowered considerably and allows us to go to
-the fun part of coding much faster and skip a big pile of frustration about syntax.
+## 1. Ausgangslage
 
-In the second part we will switch gears and go up one abstraction level: we will focus on creating functions that do the detail work
-and allow us to think about the parts which make up our program (read: the solution to a problem).
+Die Bibliothek der Hochschule verleiht heute ausschließlich an der Ausleihtheke. Der Bestand ist vollständig mit RFID-Tags (HF, ISO 15693) ausgestattet. An den Ausgängen stehen RFID-Sicherungsgates, zukünftig wird es auch einen Rückgabeautomaten geben (out of scope für dieses Projekt)
 
-We will use some data-handling code as an example, like reading a CSV-file from python, extracting the relevant data, do some stuff with it,
-draw a nice chart etc. As a second topic here we will introduce (read: find out on ourselves) that debugging is an important part when
-generating code and how to do that using AI.
+Katalog, Benutzerkonten, Gebühren und Mahnwesen liegen im **Bibliotheksmanagementsystem (LMS, Horizon)** eines Bibliotheksverbunds, das als gehosteter Dienst betrieben wird. Die Hochschule kann es nicht verändern, nur über seine Schnittstellen nutzen.
 
-This will lead us to use genAI to generate tests for our code and introduce the TDD concept.
+## 2. Ziele
+
+### Projektziel
+
+Benutzer leihen Bücher selbstständig an Self-Service-Terminals aus und merken ausgeliehene Bücher vor, ohne dass Personal beteiligt ist. Die Anforderungen im Detail sind in req.md definiert.
+
+
+
+### Abgrenzung
+
+* Kein Ersatz oder Erweiterung des LMS (Katalog, Erwerbung, Mahnwesen, Gebühren)
+* Keine Rückgabe am Terminal (zunächst an der Theke später an einem Rückgabeautomaten)
+* Payment separat
+* Recherche separat
+* Fernleihe, Medien außer Büchern (z. B. Laptops) an der Theke
+
+## 3. Stakeholder
+siehe req.md
+
+## 4. Systemabgrenzung
+
+**Zum System gehören:**
+* die Self-Service-Terminals: Gehäuse, Touchscreen, Lautsprecher, HF-RFID-Reader (Ablagefläche für bis zu 5 Bücher, NFR-P2) und die Terminal-Software
+* die Ansteuerung des RFID-Readers: Tags lesen, Diebstahlschutz deaktivieren (FR-5.1), ist also kein externen Akteur.
+
+**Fachlicher Umfang:** Ausleihe (UC-1, US-1 bis US-4) (Epic 1), Vormerkung mit Warteschlange (US-5)(Epic 2), Abholung aus dem Abholregal, Sitzungsverwaltung (US-6) (Epic 1), Benachrichtigung bei Abholbereitschaft (FR-4.3) (Epic 2).
+
+**Nicht zum System gehören:**
+
+* **Rückgabe:** Die Rückgabe erfolgt zukünftig (nicht im scope des Projekts) an einem Rückgabeautomaten, derzeit an der Theke. Beide buchen direkt im LMS und reaktivieren den Diebstahlschutz. Die SSA muss von Rückgaben aber **erfahren**, weil FR-4.3 (Abholregal, Benachrichtigung) davon abhängt. *Festlegung*: Rückgabe ist außerhalb des Systems. Wie die SSA davon erfährt, ist offen.
+* **Bereitstellen ins Abholregal:** Das Thekenpersonal stellt zurückgegebene Bücher ein und legt vorgemerkte Bücher ins Abholregal (Zustand `Returned` → `ReadyForPickup` im Zustandsmodell). Dazu nutzt es ein Werkzeug. Ob dieses Werkzeug zur SSA gehört (kleine Web-Oberfläche) oder das LMS-Client ist, ist offen.
+
+* **Externe Systeme**
+* Katalog, Exemplardaten, Benutzerkonten, Gebühren, Mahnwesen (LMS)
+* Sicherungsgates, Rückgabeautomat
+* Ausweisverwaltung (Campus-Karte, IdM)
+* Reservierung/Vormerkung (Web-Schnittstelle)
+* Vormerken und Stornieren sind am Terminal möglich (z. B. nach Fehlern), während das externe Web-Portal lediglich ein zusätzlicher Online-Kanal ins LMS ist
